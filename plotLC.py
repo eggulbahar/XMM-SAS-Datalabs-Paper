@@ -54,81 +54,82 @@ from astropy.time import Time
 from astropy.units import UnitsWarning
 
 
-def plotLCmatplotlib(fileNames, names, title='Lightcurve Graph', threshold=None, xlim=None, ylim=None):
-    """
-    Plot light curves with error bars.
+def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607):
+    seconds_in_day = 86400  # Number of seconds in a day
 
-    Parameters:
-        fileNames (list): List of FITS file paths.
-        names (list): List of labels for each light curve.
-        threshold (float, optional): Threshold value for the plot.
-    """
+      # Create the main plot and axis
+    fig, ax1 = plt.subplots(figsize=(12, 6))
 
     for fileName, name in zip(fileNames, names):
         if fileName != "NOT FOUND":
             fitsFile = fits.open(fileName)
             prihdu = fitsFile[1].header
-            
-            # Read threshold from the FITS header if not provided
+
+            # Extract threshold value from header if available
             if 'CUTVAL' in prihdu:
                 threshold = prihdu['CUTVAL']
 
             cols = fitsFile[1].columns
             colName = None
-            errName = None
-            
-            # Identify the data column and error column
+
+            # Determine the correct column name for RATE or COUNTS
             for i, x in enumerate(cols.names):
                 if "RATE" in x:
                     colName = cols.names[i]
-                elif "COUNTS" in x:
+                if "COUNTS" in x:
                     colName = cols.names[i]
-                if "ERR" in x or "ERROR" in x:
-                    errName = cols.names[i]
-            
+
             data = fitsFile[1].data
-            xdata = data.field('TIME') - min(data.field('TIME'))  # Normalize time
+            xdata = data.field('TIME')  # Extract the time column
             ydata = data.field(colName)
-            yerr = data.field(errName) if errName else None  # Error bars, if available
 
-            xmax = np.amax(xdata)
-            xmin = np.amin(xdata)
+            # Convert time from seconds to days since MJD reference
+            xdata_days = (xdata / seconds_in_day) + mjd_ref
 
+            # Calculate orbital phase
+            orbital_phase = ((xdata - T0) / P_orb) % 1
+
+            xmax = np.amax(xdata_days)
+            xmin = np.amin(xdata_days)
+
+            # Check if bin_size is provided
             
-            # Plot raw data with error bars
-            plt.errorbar(xdata, ydata, yerr=yerr, fmt='-', label=name)
+                # Plot the regular light curve
+            ax1.plot(xdata_days, ydata, label=name, linestyle="", marker=".")
 
+            # Set plot labels and titles
             if colName == 'RATE':
-                plt.title(title)
-                plt.xlabel("Time (s)")
-                plt.ylabel("Cts/s")
+                ax1.set_title("XMM EPIC-pn (0.5-10 keV)")
+                ax1.set_xlabel(f"Time (days since MJD {mjd_ref})")
+                ax1.set_ylabel("Cts/s")
             else:
-                plt.title(title)
-                plt.xlabel("Time (s)")
-                plt.ylabel("Counts")
+                ax1.set_title("XMM EPIC-pn (0.5-10 keV)")
+                ax1.set_xlabel(f"Time (days since MJD {mjd_ref})")
+                ax1.set_ylabel("Counts")
 
-            # Plot the threshold line, if specified
+            # Add a threshold line if specified
             if threshold is not None and threshold != 'None':
                 if colName == 'COUNTS':
                     threshold = float(threshold) * 100.
 
-                plt.axhline(y=threshold, color='r', linestyle='--', label='Threshold')
-                plt.text(xmin + 0.1 * (xmax - xmin), threshold + 0.01 * threshold,
-                         f"{threshold} cts/sec", ha='center')
-            
-            # Set xlim and ylim if provided
-            if xlim is not None and xlim != 'None':
-                plt.xlim(xlim)  # Set x-axis limits
-            if ylim is not None and ylim != 'None':
-                plt.ylim(ylim)  # Set y-axis limits
-                
-            
+                y2data = [threshold] * len(xdata_days)
+                ax1.plot(xdata_days, y2data, linestyle='--', color='red')
+                ax1.text(xmin + 0.1 * (xmax - xmin), threshold + 0.01 * threshold,
+                         str(threshold) + " cts/sec", ha='center', color='red')
+
             fitsFile.close()
         else:
-            print(f"File not found: {fileName}\n")
+            print("File not found " + fileName + "\n")
+
+    # Add a secondary x-axis for orbital phase
+    def phase_converter(days):
+        seconds = (days - mjd_ref) * seconds_in_day
+        return ((seconds - T0) / P_orb) % 1
+
+    ax2 = ax1.secondary_xaxis('top', functions=(phase_converter, lambda phase: phase * P_orb / seconds_in_day + mjd_ref))
+    ax2.set_xlabel("Orbital Phase")
 
     plt.legend()
-        
     plt.show()
             
 
