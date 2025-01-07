@@ -54,11 +54,12 @@ from astropy.time import Time
 from astropy.units import UnitsWarning
 
 
-def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607):
+def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607, figname="lightcurve.png"):
     seconds_in_day = 86400  # Number of seconds in a day
 
       # Create the main plot and axis
     fig, ax1 = plt.subplots(figsize=(12, 6))
+    ax1.xaxis.get_offset_text().set_visible(False)
 
     for fileName, name in zip(fileNames, names):
         if fileName != "NOT FOUND":
@@ -120,7 +121,9 @@ def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607)
             fitsFile.close()
         else:
             print("File not found " + fileName + "\n")
-
+    
+    #ax1.set_yscale('log')
+    #ax1.set_ylim(30, 700)
     # Add a secondary x-axis for orbital phase
     def phase_converter(days):
         seconds = (days - mjd_ref) * seconds_in_day
@@ -128,10 +131,13 @@ def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607)
 
     ax2 = ax1.secondary_xaxis('top', functions=(phase_converter, lambda phase: phase * P_orb / seconds_in_day + mjd_ref))
     ax2.set_xlabel("Orbital Phase")
+    
+    plt.savefig(figname)
 
     plt.legend()
     plt.show()
-            
+
+
 
 def plotLC(fileNames, names, threshold=None):
     """
