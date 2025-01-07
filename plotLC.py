@@ -54,10 +54,10 @@ from astropy.time import Time
 from astropy.units import UnitsWarning
 
 
-def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607, figname="lightcurve.png"):
+def plotVelaX1LC(fileNames, names, threshold=None, figname="lightcurve.png"):
     seconds_in_day = 86400  # Number of seconds in a day
 
-      # Create the main plot and axis
+    # Create the main plot and axis
     fig, ax1 = plt.subplots(figsize=(12, 6))
     ax1.xaxis.get_offset_text().set_visible(False)
 
@@ -83,29 +83,38 @@ def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607,
             data = fitsFile[1].data
             xdata = data.field('TIME')  # Extract the time column
             ydata = data.field(colName)
+            
+            mjd_reference = 50814  # Reference MJD
+            mjd_target = 58607  # Target MJD
+            seconds_in_day = 86400
+            # Calculate the reference time difference in seconds
+            time_difference = (mjd_target - mjd_reference) * seconds_in_day
+            # Convert TT times to relative MJD
+            relative_seconds = xdata - time_difference
+            relative_mjd = mjd_target + (relative_seconds / seconds_in_day)
 
             # Convert time from seconds to days since MJD reference
-            xdata_days = (xdata / seconds_in_day) + mjd_ref
+            xdata_days = relative_mjd-58607
+            
+            
 
-            # Calculate orbital phase
-            orbital_phase = ((xdata - T0) / P_orb) % 1
+            # Calculate orbital phase with respect to T90
+            orbital_phase = ((relative_mjd - 52974.001) / 8.964357) % 1
 
             xmax = np.amax(xdata_days)
             xmin = np.amin(xdata_days)
 
-            # Check if bin_size is provided
-            
-                # Plot the regular light curve
+            # Plot the regular light curve
             ax1.plot(xdata_days, ydata, label=name, linestyle="", marker=".")
 
             # Set plot labels and titles
             if colName == 'RATE':
                 ax1.set_title("XMM EPIC-pn (0.5-10 keV)")
-                ax1.set_xlabel(f"Time (days since MJD {mjd_ref})")
+                ax1.set_xlabel(f"Time (days since MJD 58607)")
                 ax1.set_ylabel("Cts/s")
             else:
                 ax1.set_title("XMM EPIC-pn (0.5-10 keV)")
-                ax1.set_xlabel(f"Time (days since MJD {mjd_ref})")
+                ax1.set_xlabel(f"Time (days since MJD 58607)")
                 ax1.set_ylabel("Counts")
 
             # Add a threshold line if specified
@@ -122,19 +131,18 @@ def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607,
         else:
             print("File not found " + fileName + "\n")
     
-    #ax1.set_yscale('log')
-    #ax1.set_ylim(30, 700)
-    # Add a secondary x-axis for orbital phase
-    def phase_converter(days):
-        seconds = (days - mjd_ref) * seconds_in_day
-        return ((seconds - T0) / P_orb) % 1
 
-    ax2 = ax1.secondary_xaxis('top', functions=(phase_converter, lambda phase: phase * P_orb / seconds_in_day + mjd_ref))
+
+    ax2 = ax1.secondary_xaxis('top')
     ax2.set_xlabel("Orbital Phase")
+
+    # Set the secondary x-axis tick labels as orbital phases
+    ax2.set_xticks(ax1.get_xticks())  # Use the same x-ticks as the main axis
+    ax2.set_xticklabels([f"{((x +58607 - 52974.001) / 8.964357) % 1:.2f}" for x in ax1.get_xticks()])
+    
+    
     plt.legend()
     plt.savefig(figname)
-
-    
     plt.show()
 
 
