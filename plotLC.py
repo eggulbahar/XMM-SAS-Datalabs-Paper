@@ -131,10 +131,10 @@ def plotLCmatplotlib(fileNames, names, T0, P_orb, threshold=None, mjd_ref=58607,
 
     ax2 = ax1.secondary_xaxis('top', functions=(phase_converter, lambda phase: phase * P_orb / seconds_in_day + mjd_ref))
     ax2.set_xlabel("Orbital Phase")
-    
+    plt.legend()
     plt.savefig(figname)
 
-    plt.legend()
+    
     plt.show()
 
 
