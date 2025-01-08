@@ -82,4 +82,4 @@ for i in range(len(tt_times) - 1):
     grouped_spectra.append(in_GRPFile)
     
 
-print(grouped_spectra)
+print(f'All the grouped spectra produced: {grouped_spectra}')
