@@ -54,7 +54,7 @@ from astropy.time import Time
 from astropy.units import UnitsWarning
 
 
-def plotVelaX1LC(fileNames, names, threshold=None, figname="lightcurve.png"):
+def plotVelaX1LC(fileNames, names, threshold=None, figname="lightcurve.png", yLog=False, connect_points=False):
     seconds_in_day = 86400  # Number of seconds in a day
 
     # Create the main plot and axis
@@ -104,8 +104,10 @@ def plotVelaX1LC(fileNames, names, threshold=None, figname="lightcurve.png"):
             xmax = np.amax(xdata_days)
             xmin = np.amin(xdata_days)
 
-            # Plot the regular light curve
-            ax1.plot(xdata_days, ydata, label=name, linestyle="", marker=".")
+            if connect_points:
+                ax1.plot(xdata_days, ydata, label=name, linestyle='-', marker='.')
+            else:
+                ax1.plot(xdata_days, ydata, label=name, linestyle="", marker=".")
 
             # Set plot labels and titles
             if colName == 'RATE':
@@ -131,6 +133,8 @@ def plotVelaX1LC(fileNames, names, threshold=None, figname="lightcurve.png"):
         else:
             print("File not found " + fileName + "\n")
     
+    if yLog:
+        ax1.set_yscale('log')
 
 
     ax2 = ax1.secondary_xaxis('top')

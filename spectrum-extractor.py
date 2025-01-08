@@ -17,7 +17,7 @@ for i, t in enumerate(T_obs):
     relative_seconds =(t-58607)* 86400
     time_difference = (58607 - 50814) * 86400
     tt_times.append(relative_seconds+time_difference)
-print(tt_times)
+#print(tt_times)
 
 wdir=os.getcwd()
 home = os.path.expanduser('~')
