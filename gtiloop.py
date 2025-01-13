@@ -35,8 +35,10 @@ start_time = obs_start
 while start_time < obs_end:
     stop_time = start_time + 283.44
     gti_file = os.path.join(gti_dir, f"gti_{start_time:.3f}_{stop_time:.3f}.fits")
-    cmd = f"tabgtigen table={table} expression='TIME >= {start_time} && TIME < {stop_time}' gtiset={gti_file}"
-    subprocess.run(cmd, shell=True, check=True)
+    cmd = "tabgtigen" 
+    expression = f'TIME >= {start_time} && TIME < {stop_time}'
+    inargs = [f'table={table}', f'expression={expression}', f'gtiset={gti_file}']
+    w(cmd, inargs).run()
     start_time = stop_time
 
 print(f"GTI files created in {gti_dir}.")
