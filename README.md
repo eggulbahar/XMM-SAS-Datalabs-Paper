@@ -18,5 +18,8 @@ If running the Notebook on [ESA Datalabs](https://datalabs.esa.int/) inside the 
 
 To run locally you need python 3.10 or above and standard packages like `astropy`, `numpy`, `scipy`, `plotly`, `lcviz` and [HEASOFT](https://heasarc.gsfc.nasa.gov/lheasoft/) built from source in order to have `pyXspec` available. You will need SAS version 21.
 
+---
+
 *Author: Esin G. Gulbahar*
+
 *Last Updated: 24/02/2025*
